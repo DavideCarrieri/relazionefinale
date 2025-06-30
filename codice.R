@@ -94,22 +94,40 @@ categorie_summary<-for (var in categoriche) {
 }
 
 #Frequenza on-demand
-ggplot(df_small, aes(x = cluster, fill = on_demand)) +
-  geom_bar(position = "stack") +
-  labs(title = "Uso di strumenti on demand per cluster", x = "Cluster", y = "Proporzione", fill= "Strumenti On-demand") +
-  theme_minimal()
+ond_df <- df_small %>%
+  group_by(cluster, on_demand) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  mutate(percent = n / sum(n) * 100)
+
+# Grafico con percentuali
+ggplot(ond_df, aes(x = cluster, y = percent, fill = on_demand)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  geom_text(aes(label = paste0(round(percent, 1), "%")),
+            position = position_stack(vjust = 0.5), size = 3, color = "black") +
+  labs(title = "Uso di strumenti on demand per cluster",
+       x = "Cluster", y = "Percentuale", fill = "Strumenti On-demand") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
 
 ## Frequenza d'ascolto radio per cluster
 df_small$ascolta_radio <-  factor(df_small$ascolta_radio,
                               levels = c("1", "2", "3", "4"),
                               labels = c("Abitualmente", "Spesso", "Di tanto in tanto", "Raramente"))
 
-ggplot(df_small, aes(x = cluster, fill = ascolta_radio)) +
-  geom_bar(position = "stack", color = "black") +
-  geom_text(stat = "count", aes(label = after_stat(count), group = ascolta_radio),
-            position = position_stack(vjust = 0.5), color = "black", size = 3) +
+freq_df <- df_small %>%
+  group_by(cluster, ascolta_radio) %>%
+  summarise(n = n(), .groups = 'drop') %>%
+  group_by(cluster) %>%
+  mutate(percent = n / sum(n) * 100)
+
+
+ggplot(freq_df, aes(x = cluster, y = percent, fill = ascolta_radio)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  geom_text(aes(label = paste0(round(percent, 1), "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 3) +
   labs(title = "Frequenza d'ascolto radio per cluster",
-       x = "Cluster", y = "Frequenza assoluta", fill = "Ascolta radio") +
+       x = "Cluster", y = "Percentuale", fill = "Ascolta radio") +
   scale_fill_brewer(palette = "Set1") +
   theme_minimal()
 
@@ -121,17 +139,44 @@ df_small$pubblicità_fastidio <- factor(df_small$pubblicità_fastidio,
 
 table(df_small$pubblicità_fastidio, df_small$cluster)
 
+
+fast_df <- df_small %>%
+  group_by(cluster, pubblicità_fastidio) %>%
+  summarise(n = n(), .groups = 'drop') %>%
+  group_by(cluster) %>%
+  mutate(percent = n / sum(n) * 100)
+
+
+ggplot(fast_df, aes(x = cluster, y = percent, fill = pubblicità_fastidio)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  geom_text(aes(label = paste0(round(percent, 1), "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 3) +
+  labs(title = "Come la popolazione trova la pubblicità",
+       x = "Cluster", y = "Percentuale", fill = "Popolazione e pubblicità") +
+  scale_fill_brewer(palette = "Set1") +
+  theme_minimal()
+
 ## Attenzione e interesse agli spot per cluster
 
 df_small$attenzione_interesse <- factor(df_small$attenzione_interesse,
                                         levels = c("1", "2", "3", "4", "5"),
                                         labels = c("Per nulla interessanti", "Poco interessanti","Mediamente interessanti", "Abbastanza interessanti", "Molto interessanti"))
 
-ggplot(df_small, aes(x = cluster, fill = attenzione_interesse)) +
-  geom_bar(position = "stack", color = "black") +
-  geom_text(stat = "count", aes(label = after_stat(count), group = attenzione_interesse),
+interesse_df <- df_small %>%
+  group_by(cluster, attenzione_interesse) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(cluster) %>%
+  mutate(percent = n / sum(n) * 100)
+
+# Grafico con percentuali
+ggplot(interesse_df, aes(x = cluster, y = percent, fill = attenzione_interesse)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  geom_text(aes(label = paste0(round(percent, 1), "%")),
             position = position_stack(vjust = 0.5), color = "black", size = 3) +
-  labs(title = "Attenzione e interesse agli spot per cluster", x = "Cluster", y = "Frequenza assoluta", fill = "Attenzione e interesse") +
+  labs(title = "Attenzione e interesse agli spot per cluster",
+       x = "Cluster", y = "Percentuale", fill = "Attenzione e interesse") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   scale_fill_brewer(palette = "Set1") +
   theme_minimal()
 
@@ -143,12 +188,48 @@ df_small$qualità_spot <- factor(df_small$qualità_spot,
                                            "Nè insoddisfatto nè soddisfatto", "Abbastanza soddisfatto", "Del tutto soddisfatto"))
 
 table(df_small$qualità_spot, df_small$cluster)
+
+qualita_df <- df_small %>%
+  group_by(cluster, qualità_spot) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(cluster) %>%
+  mutate(percent = n / sum(n) * 100)
+
+# Grafico
+ggplot(qualita_df, aes(x = cluster, y = percent, fill = qualità_spot)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  geom_text(aes(label = paste0(round(percent, 1), "%")),
+            position = position_stack(vjust = 0.5), size = 3, color = "black") +
+  labs(title = "Qualità percepita degli spot per cluster",
+       x = "Cluster", y = "Percentuale", fill = "Qualità spot") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  scale_fill_brewer(palette = "Set1")
+
 #frequenza break
 df_small$frequenza_break<- factor(df_small$frequenza_break,
                                 levels = c("1", "2", "3", "4", "5"),
                                 labels = c("Del tutto insoddisfatto", "Abbastanza insoddisfatto",
                                            "Nè insoddisfatto nè soddisfatto", "Abbastanza soddisfatto", "Del tutto soddisfatto"))
 table(df_small$frequenza_break, df_small$cluster) 
+
+# Calcolo percentuali
+break_df <- df_small %>%
+  group_by(cluster, frequenza_break) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(cluster) %>%
+  mutate(percent = n / sum(n) * 100)
+
+# Grafico
+ggplot(break_df, aes(x = cluster, y = percent, fill = frequenza_break)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  geom_text(aes(label = paste0(round(percent, 1), "%")),
+            position = position_stack(vjust = 0.5), size = 3, color = "black") +
+  labs(title = "Frequenza dei break pubblicitari per cluster",
+       x = "Cluster", y = "Percentuale", fill = "Frequenza break") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  scale_fill_brewer(palette = "Set1")
 
 # Aggiungiamo età e genere per l'analisi dei profili dei cluster
 df_small$età <- df %>% filter(!is.na(on_demand)) %>% 
@@ -421,3 +502,5 @@ ggplot(df_device_prop, aes(x = cluster, y = percentuale, fill = device)) +
   ) +
   scale_fill_brewer(palette = "Set1") +
   theme_minimal()
+
+
